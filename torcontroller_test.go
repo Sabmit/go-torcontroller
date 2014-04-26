@@ -1,9 +1,9 @@
 package torcontroller
 
 import (
-//	"fmt"
+	//	"fmt"
 	"testing"
-//	"io/ioutils"
+	//	"io/ioutils"
 )
 
 const (
@@ -14,13 +14,25 @@ const (
 	passwordHex = "44724177617452756265784133653d"
 )
 
-func TestAuthenticate(t *testing.T) {
+func setupClient(t *testing.T) *Client {
 	c, err := NewClient(addr)
-	defer c.Close()
 
 	if err != nil {
 		t.Fatal(err)
 	}
+	return c
+}
+
+func TestAuthenticate(t *testing.T) {
+	c := setupClient(t)
+	defer c.Close()
+
+	err := c.Authenticate("A bad password")
+	if err == nil {
+		t.Fatal("Error, expected error code 515, got", 250)
+	}
+
+	c.ReConnect() // Bad authentificate causes the server to close de socket
 
 	err = c.Authenticate(passwordHex)
 	if err != nil {
@@ -32,10 +44,6 @@ func TestAuthenticate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = c.Authenticate("A bad password")
-	if err == nil {
-		t.Fatal("Error, expected error code 515, got", 250)
-	}
 }
 
 func TestNewClient(t *testing.T) {
